@@ -1,43 +1,84 @@
 body {
+    font-family: 'Arial', sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-family: 'Arial', sans-serif;
     height: 100vh;
+    background-color: #f4f6f8;
     margin: 0;
+    color: #333;
+    box-sizing: border-box;
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: #5d647b;
 }
 
 .game-board {
     display: grid;
     grid-template-columns: repeat(3, 100px);
     grid-template-rows: repeat(3, 100px);
-    gap: 10px;
+    gap: 5px;
+    margin: 20px 0;
 }
 
 .cell {
-    background-color: #f0f0f0;
+    background-color: #fff;
     border: 2px solid #ddd;
     font-size: 2rem;
-    font-weight: bold;
-    color: #333;
+    color: #555;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
 }
 
 .cell:hover {
-    background-color: #e4e4e4;
+    background-color: #e7e7e7;
+    transform: scale(1.05);
+}
+
+.cell:disabled {
+    cursor: default;
+    color: #aaa;
 }
 
 #gameStatus {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+#playerSetup,
+#restartButton {
+    margin: 10px 0;
 }
 
 #restartButton {
-    margin-top: 20px;
-    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
     font-size: 1rem;
+    border: none;
+    border-radius: 5px;
     cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#restartButton:hover {
+    background-color: #45a049;
+}
+
+input[type="text"] {
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #4CAF50;
 }
