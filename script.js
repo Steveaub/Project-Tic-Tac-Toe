@@ -1,16 +1,24 @@
+
+function updateBoardUI() {
+  const board = Gameboard.getBoard();
+  const cells = document.querySelectorAll(".cell");
+  cells.forEach((cell, index) => {
+      cell.textContent = board[index];
+      cell.disabled = board[index] !== ""; // Disable the cell if it's already been played
+  });
+}
+
 const Gameboard = (() => {
   const board = ["", "", "", "", "", "", "", "", ""];
 
-  const getBoard = () => board;
+  const getBoard = () => [...board];  // Return a copy of the board to prevent direct mutation
 
   const makeMove = (index, playerSymbol) => {
       if (board[index] === "") {
           board[index] = playerSymbol;
-          return true; // Move was successful
-      } else {
-          console.log("Invalid choice, please try again");
-          return false; // Move was unsuccessful
+          return true;  // Move was successful
       }
+      return false;  // Move was unsuccessful
   };
 
   const resetBoard = () => {
@@ -22,15 +30,16 @@ const Gameboard = (() => {
 
 function createPlayer(name, symbol) {
   return {
+      name,
+      symbol,
       getName: () => name,
       getSymbol: () => symbol,
   };
 }
 
 const GameController = (() => {
-  const player1 = createPlayer("Alice", "X");
-  const player2 = createPlayer("Bob", "O");
-  let currentPlayer = player1;
+  let player1, player2;
+  let currentPlayer;
 
   const updateGameStatus = (message) => {
       const gameStatus = document.getElementById("gameStatus");
@@ -38,54 +47,59 @@ const GameController = (() => {
   };
 
   const startGame = () => {
-      Gameboard.resetBoard();
+      player1 = createPlayer(document.getElementById('player1Name').value || "Player 1", "X");
+      player2 = createPlayer(document.getElementById('player2Name').value || "Player 2", "O");
       currentPlayer = player1;
-      updateGameStatus("Player 1's turn");
+      Gameboard.resetBoard();
+      updateGameStatus(`${currentPlayer.getName()}'s turn`);
+      document.getElementById('playerSetup').style.display = 'none';  // Hide setup fields
+      updateBoardUI();
   };
 
   const switchTurns = () => {
       currentPlayer = currentPlayer === player1 ? player2 : player1;
-      updateGameStatus(`Player ${currentPlayer.getName()}'s turn`);
-  };
-
-  const checkForWin = () => {
-      const symbol = currentPlayer.getSymbol();
-      const b = Gameboard.getBoard();
-
-      for (let i = 0; i < 3; i++) {
-          if (b[i * 3] === symbol && b[i * 3 + 1] === symbol && b[i * 3 + 2] === symbol) {
-              return true;
-          }
-          if (b[i] === symbol && b[i + 3] === symbol && b[i + 6] === symbol) {
-              return true;
-          }
-      }
-
-      if (b[0] === symbol && b[4] === symbol && b[8] === symbol) return true;
-      if (b[2] === symbol && b[4] === symbol && b[6] === symbol) return true;
-
-      return false;
-  };
-
-  const checkForDraw = () => {
-      return Gameboard.getBoard().every(cell => cell !== "") && !checkForWin();
+      updateGameStatus(`${currentPlayer.getName()}'s turn`);
   };
 
   const makeMove = (index) => {
       if (Gameboard.makeMove(index, currentPlayer.getSymbol())) {
+          updateBoardUI();
           if (checkForWin()) {
-              updateGameStatus(`Player ${currentPlayer.getName()} wins!`);
+              updateGameStatus(`${currentPlayer.getName()} wins!`);
+              endGame();
           } else if (checkForDraw()) {
               updateGameStatus('Game is a draw!');
+              endGame();
           } else {
               switchTurns();
           }
       }
   };
 
+  const checkForWin = () => {
+      const b = Gameboard.getBoard();
+      const s = currentPlayer.getSymbol();
+      const winConditions = [
+          [0, 1, 2], [3, 4, 5], [6, 7, 8],  // Rows
+          [0, 3, 6], [1, 4, 7], [2, 5, 8],  // Columns
+          [0, 4, 8], [2, 4, 6]              // Diagonals
+      ];
+      return winConditions.some(condition => 
+          condition.every(index => b[index] === s));
+  };
+
+  const checkForDraw = () => {
+      return Gameboard.getBoard().every(cell => cell !== "") && !checkForWin();
+  };
+
+  const endGame = () => {
+      document.querySelectorAll('.cell').forEach(cell => cell.disabled = true);
+  };
+
   const resetGame = () => {
       Gameboard.resetBoard();
-      startGame();
+      document.querySelectorAll('.cell').forEach(cell => cell.disabled = false);
+      startGame();  // Begin a new game
   };
 
   return { startGame, makeMove, switchTurns, checkForWin, checkForDraw, resetGame };
@@ -93,27 +107,16 @@ const GameController = (() => {
 
 // UI Interaction
 document.addEventListener("DOMContentLoaded", () => {
-  const cells = document.querySelectorAll(".cell");
-  const restartButton = document.getElementById("restartButton");
+  const startGameButton = document.getElementById('startGameButton');
+  const restartButton = document.getElementById('restartButton');
 
-  GameController.startGame();
+  startGameButton.addEventListener('click', GameController.startGame);
+  restartButton.addEventListener('click', GameController.resetGame);
 
-  cells.forEach(cell => {
-      cell.addEventListener("click", () => {
-          GameController.makeMove(parseInt(cell.getAttribute('data-index')));
-          updateBoardUI();
+  document.querySelectorAll(".cell").forEach(cell => {
+      cell.addEventListener('click', (e) => {
+          const index = parseInt(e.target.getAttribute('data-index'));
+          GameController.makeMove(index);
       });
   });
-
-  restartButton.addEventListener("click", () => {
-      GameController.resetGame();
-      updateBoardUI();
-  });
-
-  function updateBoardUI() {
-      const board = Gameboard.getBoard();
-      board.forEach((cell, index) => {
-          cells[index].textContent = cell;
-      });
-  }
 });
